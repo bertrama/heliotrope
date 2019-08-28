@@ -42,7 +42,7 @@ module CommonWorkPresenter
   def work_thumbnail(width = 225)
     img_tag = "<img class=\"img-responsive\" src="
     img_tag += if representative_id.present?
-                 "\"/image-service/#{representative_id}/full/#{width},/0/default.jpg#{representative_presenter&.image_cache_breaker}\""
+                 "\"/image-service/#{representative_id}/full/#{width},/0/default.jpg#{representative_presenter&.browser_cache_breaker}\""
                else
                  "\"#{thumbnail_path}\" style=\"max-width:#{width}px\""
                end

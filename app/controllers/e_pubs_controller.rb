@@ -53,7 +53,16 @@ class EPubsController < CheckpointController
 
       send_file file
     elsif @entity.is_a?(Sighrax::PortableDocumentFormat)
-      send_data @presenter.file.content, filename: @presenter.label, type: "application/pdf", disposition: "inline"
+      asset = FileSet.find(@presenter.id)
+      self.status = 200
+      send_file_headers!({ disposition: 'inline', type: 'application/pdf', filename: @presenter.label }) # rubocop:disable Style/BracesAroundHashParameters
+      response.headers['Expires'] = 1.year.from_now.httpdate
+      expires_in 1.year # results in 'Cache-Control' with resulting `max-age` and defaulting to private
+      response.headers['Content-Length'] ||= @presenter.file.size.to_s
+      # Prevent Rack::ETag from calculating a digest over body with a Last-Modified response header
+      # any Solr document save will change this, see definition of browser_cache_breaker
+      response.headers['Last-Modified'] = Time.strptime(@presenter.browser_cache_breaker, '?%s').utc.strftime("%a, %d %b %Y %T GMT")
+      self.response_body = asset.original_file.stream
     end
   rescue StandardError => e
     Rails.logger.info("EPubsController.file raised #{e}")
